@@ -19,4 +19,8 @@ action :create do
 end
 
 action :delete do
+  converge_by "Deleting keypair '#{new_resource.name}'" do
+    current_resource.client.delete_key_pair(key_name: new_resource.name)
+    new_resource.updated_by_last_action true
+  end if current_resource.exist?
 end
