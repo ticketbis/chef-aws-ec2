@@ -9,9 +9,9 @@ attribute :instance_tenancy , kind_of: String, equal_to: ['default', 'dedicated'
 attribute :enable_dns_support , kind_of: [TrueClass, FalseClass], default: true
 attribute :enable_dns_hostnames , kind_of: [TrueClass, FalseClass],  default: false
 attribute :internet_gateway , kind_of: [TrueClass, FalseClass],  default: true
-attribute :region, kind_of: String, required: true
-attribute :access_key_id, kind_of: String, required: true
-attribute :secret_access_key, kind_of: String, required: true
+attribute :region, kind_of: String
+attribute :access_key_id, kind_of: String
+attribute :secret_access_key, kind_of: String
 
 attr_accessor :client, :vpc
 
