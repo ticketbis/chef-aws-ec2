@@ -1,0 +1,42 @@
+---
+driver:
+  name: vagrant
+  synced_folders:
+    - ["../", "/vagrant"]
+
+provisioner:
+  name: chef_zero
+  chef_omnibus_url: file:///vagrant/install_chef.sh
+
+platforms:
+  - name: ubuntu-14.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[aws-ec2::default]
+  - name: create_vpc
+    run_list:
+      - recipe[aws-ec2::create_vpc]
+  - name: delete_vpc
+    run_list:
+      - recipe[aws-ec2::delete_vpc]
+  - name: create_route_table
+    run_list:
+      - recipe[aws-ec2::create_route_table]
+  - name: delete_route_table
+    run_list:
+      - recipe[aws-ec2::delete_route_table]
+  - name: create_subnet
+    run_list:
+      - recipe[aws-ec2::create_subnet]
+  - name: delete_subnet
+    run_list:
+      - recipe[aws-ec2::delete_subnet]
+  - name: create_security_group
+    run_list:
+      - recipe[aws-ec2::create_security_group]
+  - name: delete_security_group
+    run_list:
+      - recipe[aws-ec2::delete_security_group]
+
