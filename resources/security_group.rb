@@ -6,9 +6,9 @@ attribute :name, kind_of: String, name_attribute: true
 attribute :vpc, kind_of: String, required: true
 attribute :description, kind_of: String, default: '_default_'
 attribute :rules, kind_of: [Array, Hash], default: []
-attribute :region, kind_of: String, required: true
-attribute :access_key_id, kind_of: String, required: true
-attribute :secret_access_key, kind_of: String, required: true
+attribute :region, kind_of: String
+attribute :access_key_id, kind_of: String
+attribute :secret_access_key, kind_of: String
 
 attr_accessor :client, :vpc_o, :sg
 
@@ -24,7 +24,7 @@ PROTOCOLS = [:all, :icmp, :tcp, :udp]
 
 class Rule
   attr_accessor :protocol, :port, :from
-  
+
   def initialize protocol: :tcp, port: nil, from: nil
     self.protocol = protocol
     self.port = port

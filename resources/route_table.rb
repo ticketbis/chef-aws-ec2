@@ -6,9 +6,9 @@ attribute :name, kind_of: String, name_attribute: true
 attribute :vpc, kind_of: String, required: true
 attribute :default_route, kind_of: String
 attribute :routes, kind_of: Hash
-attribute :region, kind_of: String, required: true
-attribute :access_key_id, kind_of: String, required: true
-attribute :secret_access_key, kind_of: String, required: true
+attribute :region, kind_of: String
+attribute :access_key_id, kind_of: String
+attribute :secret_access_key, kind_of: String
 
 attr_accessor :client, :vpc_o, :route_table, :routes_o
 

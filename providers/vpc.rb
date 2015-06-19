@@ -1,3 +1,4 @@
+include Chef::AwsEc2::Credentials
 
 def whyrun_supported?
   true
@@ -5,9 +6,9 @@ end
 
 use_inline_resources
 
-def load_current_resource 
+def load_current_resource
   @current_resource = Chef::Resource::AwsEc2Vpc.new @new_resource.name
-  @current_resource.client = Chef::AwsEc2::get_client @new_resource.access_key_id, @new_resource.secret_access_key, @new_resource.region
+  @current_resource.client = Chef::AwsEc2::get_client aws_credentials, aws_region
   @current_resource.vpc = Chef::AwsEc2.get_vpc @current_resource.name, @current_resource.client
   unless @current_resource.vpc.nil?
     @current_resource.cidr_block(@current_resource.vpc.cidr_block)
@@ -58,7 +59,7 @@ def attach_igw
     @current_resource.client.describe_internet_gateways[:internet_gateways].each do |i|
       if i.attachments.empty?
         id = i[:internet_gateway_id]
-        break 
+        break
       end
     end
     if id.nil?

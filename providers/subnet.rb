@@ -1,3 +1,4 @@
+include Chef::AwsEc2::Credentials
 
 def whyrun_supported?
   true
@@ -7,7 +8,7 @@ use_inline_resources
 
 def load_current_resource
   @current_resource = Chef::Resource::AwsEc2Subnet.new @new_resource.name
-  @current_resource.client = Chef::AwsEc2::get_client @new_resource.access_key_id, @new_resource.secret_access_key, @new_resource.region
+  @current_resource.client = Chef::AwsEc2::get_client aws_credentials, aws_region
   @current_resource.vpc_o = Chef::AwsEc2.get_vpc @new_resource.vpc, @current_resource.client
   @current_resource.subnet = Chef::AwsEc2.get_subnet @current_resource.vpc_o, @new_resource.name, @current_resource.client
   if @current_resource.exists?
