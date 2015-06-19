@@ -10,7 +10,7 @@ attribute :secret_access_key, kind_of: String, required: true
 
 attr_accessor :client, :keypair
 
-def exists?
+def exist?
   not keypair.nil?
 end
 
