@@ -11,6 +11,11 @@ def load_current_resource
 end
 
 action :create do
+  converge_by "Creating keypair '#{new_resource.name}'" do
+    current_resource.client.import_key_pair(key_name: new_resource.name, public_key_material: new_resource.publickey)
+    new_resource.updated_by_last_action true
+    load_current_resource
+  end unless current_resource.exist?
 end
 
 action :delete do
