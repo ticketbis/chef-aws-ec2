@@ -39,4 +39,10 @@ suites:
   - name: delete_security_group
     run_list:
       - recipe[aws-ec2::delete_security_group]
+  - name: create_keypair
+    run_list:
+      - recipe[aws-ec2::create_keypair]
+  - name: delete_keypair
+    run_list:
+      - recipe[aws-ec2::delete_keypair]
 
