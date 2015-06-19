@@ -7,3 +7,4 @@ long_description 'Installs/Configures aws-ec2'
 version '0.1.0'
 
 depends 'aws-base'
+
