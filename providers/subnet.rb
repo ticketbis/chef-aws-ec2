@@ -5,7 +5,7 @@ end
 
 use_inline_resources
 
-def load_current_resource 
+def load_current_resource
   @current_resource = Chef::Resource::AwsEc2Subnet.new @new_resource.name
   @current_resource.client = Chef::AwsEc2::get_client @new_resource.access_key_id, @new_resource.secret_access_key, @new_resource.region
   @current_resource.vpc_o = Chef::AwsEc2.get_vpc @new_resource.vpc, @current_resource.client
@@ -25,11 +25,10 @@ action :create do
   converge_by "Creating subnet #{@new_resource.name}" do
     opts = {
       cidr_block: @new_resource.cidr_block,
-      availability_zone: "#{@new_resource.region}#{@new_resource.availability_zone}" 
+      availability_zone: "#{@new_resource.region}#{@new_resource.availability_zone}"
     }
     s = @current_resource.vpc_o.create_subnet opts
     s.create_tags tags: [{ key: "Name", value: @new_resource.name}]
-    @new_resource.updated_by_last_action true
     load_current_resource
   end unless @current_resource.exists?
   raise "New CIDR block requested, but cannot change once created" if @current_resource.cidr_block != @new_resource.cidr_block
@@ -39,14 +38,12 @@ action :create do
     rt = Chef::AwsEc2.get_route_table @current_resource.vpc_o, @new_resource.route_table
     raise "Subnet '#{@new_resource.route_table}' does not exist" if rt.nil?
     rt.associate_with_subnet subnet_id: @current_resource.id
-    @new_resource.updated_by_last_action true
   end if @current_resource.route_table != @new_resource.route_table
 end
 
 action :delete do
   converge_by "Deleting subnet #{@new_resource.name}" do
     @current_resource.subnet.delete
-    @new_resource.updated_by_last_action true
   end if @current_resource.exists?
 end
 

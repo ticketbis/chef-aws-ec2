@@ -25,16 +25,13 @@ action :create do
   raise "Current VPC and desired VPC does not have the same instance_tenancy" unless @current_resource.instance_tenancy == @new_resource.instance_tenancy
   converge_by "Changing enable_dns_support to #{@new_resource.enable_dns_support}" do
     @current_resource.vpc.modify_attribute enable_dns_support: { value: @new_resource.enable_dns_support }
-    @new_resource.updated_by_last_action true
   end unless @current_resource.enable_dns_support == @new_resource.enable_dns_support
   converge_by "Changing enable_dns_hostnames to #{@new_resource.enable_dns_hostnames}" do
     @current_resource.vpc.modify_attribute enable_dns_hostnames: { value: @new_resource.enable_dns_hostnames }
-    @new_resource.updated_by_last_action true
   end unless @current_resource.enable_dns_hostnames == @new_resource.enable_dns_hostnames
   attach_igw if @new_resource.internet_gateway and not @current_resource.has_igw?
   converge_by "Detaching internet gateway" do
     @current_resource.vpc.detach_internet_gateway internet_gateway_id: @current_resource.vpc.internet_gateways.first.id
-    @new_resource.updated_by_last_action true
   end if not @new_resource.internet_gateway and @current_resource.has_igw?
 end
 
@@ -42,10 +39,8 @@ action :delete do
   converge_by 'Deleting VPC' do
     converge_by 'Deleting VPC internet gateways' do
       @current_resource.vpc.internet_gateways.each { |ig| @current_resource.vpc.detach_internet_gateway internet_gateway_id: ig.id; ig.delete }
-      @new_resource.updated_by_last_action true
     end if @current_resource.vpc.internet_gateways.count > 0
     @current_resource.vpc.delete
-    @new_resource.updated_by_last_action true
   end if @current_resource.exists?
 end
 
@@ -54,7 +49,6 @@ private
 def create_vpc
   vpc = @current_resource.client.create_vpc cidr_block: @new_resource.cidr_block, instance_tenancy: @new_resource.instance_tenancy
   @current_resource.client.create_tags resources: [vpc[:vpc][:vpc_id]], tags: [{ key: 'Name', value: @new_resource.name }]
-  @new_resource.updated_by_last_action true
   load_current_resource
 end
 
@@ -71,12 +65,10 @@ def attach_igw
       converge_by 'Attaching a new internet gateway' do
         id = @current_resource.client.create_internet_gateway[:internet_gateway][:internet_gateway_id]
         @current_resource.vpc.attach_internet_gateway internet_gateway_id: id
-        @new_resource.updated_by_last_action true
       end
     else
       converge_by 'Attaching an available internet gateway' do
         @current_resource.vpc.attach_internet_gateway internet_gateway_id: id
-        @new_resource.updated_by_last_action true
       end
     end
   end

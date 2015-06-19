@@ -4,7 +4,7 @@ end
 
 use_inline_resources
 
-def load_current_resource 
+def load_current_resource
   @current_resource = Chef::Resource::AwsEc2SecurityGroup.new @new_resource.name
   @current_resource.client = Chef::AwsEc2::get_client @new_resource.access_key_id, @new_resource.secret_access_key, @new_resource.region
   @current_resource.vpc_o = Chef::AwsEc2.get_vpc @new_resource.vpc, @current_resource.client
@@ -39,23 +39,19 @@ action :create do
   converge_by "Creating security group '#{@new_resource.name}'" do
     sg = @current_resource.vpc_o.create_security_group group_name: @new_resource.name, description: @new_resource.description
     sg.create_tags tags: [{ key: "Name", value: @new_resource.name}]
-    @new_resource.updated_by_last_action true
     load_current_resource
   end unless @current_resource.exists?
   converge_by "Setting security group name to '#{@new_resource.name}'" do
     @current_resource.sg.create_tags tags: [{ key: "Name", value: @new_resource.name}]
-    @new_resource.updated_by_last_action true
   end unless @current_resource.sg.tags.any? { |t| t.key == 'Name' and t.value == @current_resource.name }
   (@new_resource.rules - @current_resource.rules).each do |r|
     converge_by "Creating rule from #{r.from} to #{r.port}/#{r.protocol}" do
       @current_resource.sg.authorize_ingress ip_permissions: [convert_rule(r)]
-      @new_resource.updated_by_last_action true
     end
   end
   (@current_resource.rules - @new_resource.rules).each do |r|
     converge_by "Deleting rule from #{r.from} to #{r.port}/#{r.protocol}" do
       @current_resource.sg.revoke_ingress ip_permissions: [convert_rule(r)]
-      @new_resource.updated_by_last_action true
     end
   end
 end
@@ -63,7 +59,6 @@ end
 action :delete do
   converge_by "Deleting security group '#{@new_resource.name}'" do
     @current_resource.sg.delete
-    @new_resource.updated_by_last_action true
   end if @current_resource.exists?
 end
 
@@ -73,7 +68,7 @@ def convert_rule rule
   r = {}
   if rule.protocol == :all then r[:ip_protocol] = '-1'
   elsif rule.protocol == :icmp then r[:ip_protocol] = 'icmp'
-  elsif rule.protocol == :tcp then  r[:ip_protocol] = 'tcp' 
+  elsif rule.protocol == :tcp then  r[:ip_protocol] = 'tcp'
   elsif rule.protocol == :udp then  r[:ip_protocol] = 'udp'
   end
   if rule.port == :all and (rule.protocol == :tcp or rule.protocol == :udp)
