@@ -9,8 +9,11 @@ use_inline_resources
 def load_current_resource
   @current_resource = Chef::Resource::AwsEc2Instance.new @new_resource.name
   current_resource.client = Chef::AwsEc2.get_client aws_credentials, aws_region
-  current_resource.instance = Chef::AwsEc2.get_instance current_resource.name, current_resource.client unless current_resource.client.nil?
-  puts current_resource.instance
+  current_resource.vpc_o = Chef::AwsEc2.get_vpc new_resource.vpc, current_resource.client unless current_resource.client.nil?
+  fail "Unknown VPC '#{new_resource.vpc}'" if current_resource.vpc_o.nil?
+  current_resource.subnet_o = Chef::AwsEc2.get_subnet current_resource.vpc_o, new_resource.subnet
+  fail "Unknown subnet '#{new_resource.subnet}'" if current_resource.subnet_o.nil?
+  current_resource.instance = Chef::AwsEc2.get_instance current_resource.name, current_resource.subnet_o unless current_resource.subnet_o.nil?
   unless current_resource.instance.nil?
   end
 end
@@ -19,10 +22,6 @@ action :create do
   i = Chef::Resource::AwsEc2Instance.IMAGES(aws_region, new_resource.image) if new_resource.image.instance_of? Symbol
   i = new_resource.image.to_s if i.nil?
   fail "Invalid image ID '#{i}'" unless /^ami-/ =~ i
-  vpc = Chef::AwsEc2.get_vpc new_resource.vpc, current_resource.client
-  fail "Unknown VPC '#{new_resource.vpc}'" if vpc.nil?
-  subnet = Chef::AwsEc2.get_subnet vpc, new_resource.subnet
-  fail "Unknown subnet '#{new_resource.subnet}'" if subnet.nil?
   unless new_resource.security_groups.nil?
     fail "Security groups must be all strings" unless new_resource.security_groups.all?{|x| x.instance_of?String}
     sgs = new_resource.security_groups.map do |sg|
@@ -37,7 +36,6 @@ action :create do
       image_id: i,
       min_count: 1, max_count: 1,
       instance_type: new_resource.instance_type,
-      subnet_id: subnet.id
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     r = current_resource.client.run_instances(opts)
