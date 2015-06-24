@@ -20,6 +20,7 @@ def load_current_resource
     current_resource.key_name current_resource.instance.key_pair.name unless current_resource.instance.key_pair.nil?
     current_resource.security_groups current_resource.instance.security_groups.map{|sg| sg.group_id}.sort unless current_resource.instance.security_groups.nil?
     current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
+    current_resource.user_data current_resource.instance.describe_attribute(attribute: 'userData').user_data.value
   end
 end
 
@@ -43,6 +44,7 @@ action :create do
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
+    opts[:user_data] = new_resource.user_data unless new_resource.user_data.nil?
     opts[:disable_api_termination] = new_resource.disable_api_termination unless new_resource.disable_api_termination.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
@@ -56,6 +58,19 @@ action :create do
   converge_by "Changing security groups #{current_resource.instance.security_groups.map{|sg| sg.group_name}} -> #{new_resource.security_groups}" do
     current_resource.instance.modify_attribute(groups: sgs)
   end unless new_resource.security_groups.nil? or current_resource.security_groups == sgs
+  unless current_resource.user_data == new_resource.user_data
+    if new_resource.user_data_allow_stop
+      converge_by "Changing user data" do
+        current_resource.instance.stop
+        current_resource.instance.wait_until_stopped{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+        current_resource.instance.modify_attribute(user_data: {value: new_resource.user_data})
+        current_resource.instance.start
+        current_resource.instance.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+      end
+    else
+      Chef::Log.warn 'Cannot change user data because machine is not stopped and \'user_data_allow_stop\' is false'
+    end
+  end
   converge_by "Changing API termination protection #{current_resource.disable_api_termination} -> #{new_resource.disable_api_termination}" do
     current_resource.instance.modify_attribute(disable_api_termination: {value: new_resource.disable_api_termination})
   end unless current_resource.disable_api_termination == new_resource.disable_api_termination

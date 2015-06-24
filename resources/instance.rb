@@ -23,8 +23,8 @@ attribute :instance_type, kind_of: String, required: true
 attribute :subnet, kind_of: String, required: true
 attribute :key_name, kind_of: String
 attribute :security_groups, kind_of: [String, Array]
-
 attribute :user_data, kind_of: String
+attribute :user_data_allow_stop, equal_to: [true, false], default: false
 attribute :monitoring, equal_to: [true,false], default: false
 attribute :disable_api_termination, equal_to: [true, false], default: true
 attribute :instance_initiated_shutdown_behavior, equal_to: ['stop', 'terminate'], default: 'stop'
