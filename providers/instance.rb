@@ -44,6 +44,9 @@ action :create do
     instances.each {|i| i.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}}
     load_current_resource
   end unless current_resource.exist?
+  # Check unchangeable values
+  fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
+  fail "Cannot change instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" unless current_resource.instance_type == new_resource.instance_type
 end
 
 action :delete do
