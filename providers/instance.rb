@@ -47,12 +47,13 @@ action :create do
   # Check unchangeable values
   fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
   fail "Cannot change instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" unless current_resource.instance_type == new_resource.instance_type
+  fail "Cannot change key pair #{current_resource.key_name} -> #{new_resource.key_name}" unless current_resource.key_name == new_resource.key_name
 end
 
 action :delete do
   converge_by "Deleting instance '#{new_resource.name}'" do
     current_resource.instance.terminate
-    current_resource.instance.wait_until_terminate{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+    current_resource.instance.wait_until_terminated{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
   end if current_resource.exist?
 end
 
