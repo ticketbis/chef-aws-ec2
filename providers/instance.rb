@@ -38,11 +38,8 @@ action :create do
       instance_type: new_resource.instance_type,
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
-    r = current_resource.client.run_instances(opts)
-    current_resource.client.create_tags(
-      resources: r.instances.map{|i| i.instance_id},
-      tags: [{ key: 'Name', value: new_resource.name}]
-    )
+    instances = current_resource.subnet_o.create_instances(opts)
+    instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
     load_current_resource
   end unless current_resource.exist?
 end
