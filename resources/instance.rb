@@ -30,7 +30,7 @@ attribute :region, kind_of: String
 attribute :access_key_id, kind_of: String
 attribute :secret_access_key, kind_of: String
 
-attr_accessor :client, :instance
+attr_accessor :client, :vpc_o, :subnet_o, :instance
 
 def exist?
   not instance.nil?
