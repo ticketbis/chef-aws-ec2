@@ -29,6 +29,9 @@ attribute :monitoring, equal_to: [true,false], default: false
 attribute :disable_api_termination, equal_to: [true, false], default: true
 attribute :instance_initiated_shutdown_behavior, equal_to: ['stop', 'terminate'], default: 'stop'
 attribute :ebs_optimized, equal_to: [true, false], default: false
+attribute :wait, equal_to: [true, false], default: true
+attribute :wait_delay, kind_of: Integer, default: 10
+attribute :wait_attempts, kind_of: Integer, default: 30
 attribute :region, kind_of: String
 attribute :access_key_id, kind_of: String
 attribute :secret_access_key, kind_of: String
