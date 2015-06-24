@@ -17,6 +17,7 @@ def load_current_resource
   unless current_resource.instance.nil?
     current_resource.image current_resource.instance.image.id
     current_resource.instance_type current_resource.instance.instance_type
+    current_resource.key_name current_resource.instance.key_pair.name unless current_resource.instance.key_pair.nil?
   end
 end
 
