@@ -42,6 +42,7 @@ action :create do
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
+    instances.each {|i| i.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}}
     load_current_resource
   end unless current_resource.exist?
 end
@@ -49,5 +50,6 @@ end
 action :delete do
   converge_by "Deleting instance '#{new_resource.name}'" do
     current_resource.instance.terminate
+    current_resource.instance.wait_until_terminate{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
   end if current_resource.exist?
 end
