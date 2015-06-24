@@ -18,6 +18,7 @@ def load_current_resource
     current_resource.image current_resource.instance.image.id
     current_resource.instance_type current_resource.instance.instance_type
     current_resource.key_name current_resource.instance.key_pair.name unless current_resource.instance.key_pair.nil?
+    current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
   end
 end
 
@@ -40,6 +41,7 @@ action :create do
       instance_type: new_resource.instance_type,
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
+    opts[:disable_api_termination] = new_resource.disable_api_termination unless new_resource.disable_api_termination.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
     instances.each {|i| i.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}}
@@ -49,6 +51,10 @@ action :create do
   fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
   fail "Cannot change instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" unless current_resource.instance_type == new_resource.instance_type
   fail "Cannot change key pair #{current_resource.key_name} -> #{new_resource.key_name}" unless current_resource.key_name == new_resource.key_name
+  converge_by "Changing API termination protection #{current_resource.disable_api_termination} -> #{new_resource.disable_api_termination}" do
+    current_resource.instance.modify_attribute(disable_api_termination: {value: new_resource.disable_api_termination})
+  end unless current_resource.disable_api_termination == new_resource.disable_api_termination
+  load_current_resource
 end
 
 action :delete do
