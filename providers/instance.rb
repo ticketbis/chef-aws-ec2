@@ -15,6 +15,8 @@ def load_current_resource
   fail "Unknown subnet '#{new_resource.subnet}'" if current_resource.subnet_o.nil?
   current_resource.instance = Chef::AwsEc2.get_instance current_resource.name, current_resource.subnet_o unless current_resource.subnet_o.nil?
   unless current_resource.instance.nil?
+    current_resource.image current_resource.instance.image.id
+    current_resource.instance_type current_resource.instance.instance_type
   end
 end
 
