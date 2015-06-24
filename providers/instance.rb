@@ -21,8 +21,7 @@ def load_current_resource
 end
 
 action :create do
-  i = Chef::Resource::AwsEc2Instance.IMAGES(aws_region, new_resource.image) if new_resource.image.instance_of? Symbol
-  i = new_resource.image.to_s if i.nil?
+  i = Chef::Resource::AwsEc2Instance.IMAGES(aws_region, new_resource.image)
   fail "Invalid image ID '#{i}'" unless /^ami-/ =~ i
   unless new_resource.security_groups.nil?
     fail "Security groups must be all strings" unless new_resource.security_groups.all?{|x| x.instance_of?String}
