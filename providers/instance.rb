@@ -55,27 +55,37 @@ action :create do
   end unless current_resource.exist?
   # Check unchangeable values
   fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
-  fail "Cannot change instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" unless current_resource.instance_type == new_resource.instance_type
   fail "Cannot change key pair #{current_resource.key_name} -> #{new_resource.key_name}" unless current_resource.key_name == new_resource.key_name
-  converge_by "Changing security groups #{current_resource.instance.security_groups.map{|sg| sg.group_name}} -> #{new_resource.security_groups}" do
-    current_resource.instance.modify_attribute(groups: sgs)
-  end unless new_resource.security_groups.nil? or current_resource.security_groups == sgs
-  unless current_resource.user_data == new_resource.user_data
-    if new_resource.user_data_allow_stop
-      converge_by "Changing user data" do
+  unless current_resource.instance_type == new_resource.instance_type and current_resource.user_data == new_resource.user_data
+    if new_resource.allow_stopping
+      converge_by "Stopping instance '#{new_resource.name}'" do
         current_resource.instance.stop
         current_resource.instance.wait_until_stopped{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
-        current_resource.instance.modify_attribute(user_data: {value: new_resource.user_data})
+      end
+      converge_by "Changing instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" do
+        current_resource.instance.modify_attribute(instance_type: {value: new_resource.instance_type})
+      end unless current_resource.instance_type == new_resource.instance_type
+      converge_by "Changing user data" do
+        puts "Actual: #{current_resource.user_data}"
+        puts "Wants: #{new_resource.user_data}"
+        current_resource.instance.modify_attribute(user_data: {value: new_resource.instance_type})
+      end unless current_resource.user_data == new_resource.user_data
+      converge_by "Starting instance '#{new_resource.name}'" do
         current_resource.instance.start
         current_resource.instance.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
       end
     else
-      Chef::Log.warn 'Cannot change user data because machine is not stopped and \'user_data_allow_stop\' is false'
+      Chef::Log.warn 'Cannot change instance type because machine is not stopped and \'allow_stopping\' is false' unless current_resource.instance_type == new_resource.instance_type
+      Chef::Log.warn 'Cannot change user data because machine is not stopped and \'allow_stopping\' is false' unless current_resource.user_data == new_resource.user_data
     end
+  end
+  converge_by "Changing security groups #{current_resource.instance.security_groups.map{|sg| sg.group_name}} -> #{new_resource.security_groups}" do
+    current_resource.instance.modify_attribute(groups: sgs)
+  end unless new_resource.security_groups.nil? or current_resource.security_groups == sgs
   converge_by "Changing monitoring #{current_resource.monitoring} -> #{new_resource.monitoring}" do
     if new_resource.monitoring then current_resource.instance.monitor
     else current_resource.instance.unmonitor
-  end
+    end
   end unless current_resource.monitoring == new_resource.monitoring
   converge_by "Changing API termination protection #{current_resource.disable_api_termination} -> #{new_resource.disable_api_termination}" do
     current_resource.instance.modify_attribute(disable_api_termination: {value: new_resource.disable_api_termination})
