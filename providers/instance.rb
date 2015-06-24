@@ -53,3 +53,35 @@ action :delete do
     current_resource.instance.wait_until_terminate{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
   end if current_resource.exist?
 end
+
+action :start do
+  if current_resource.exist?
+    case current_resource.instance.state.name
+    when 'stopped'
+     converge_by "Starting instance '#{new_resource.name}'" do
+        current_resource.instance.start
+        current_resource.instance.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+      end
+    when 'running' then
+    else Chef::Log.warn "Instance '#{new_resource.name}' in invalid state: #{current_resource.instance.state.name}"
+    end
+  else
+    Chef::Log.warn "Instance '#{new_resource.name}' does not exist"
+  end
+end
+
+action :stop do
+  if current_resource.exist?
+    case current_resource.instance.state.name
+    when 'running'
+      converge_by "Stopping instance '#{new_resource.name}'" do
+        current_resource.instance.stop
+        current_resource.instance.wait_until_stopped{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+      end
+    when 'stopped' then
+    else Chef::Log.warn "Instance '#{new_resource.name}' in invalid state: #{current_resource.instance.state.name}"
+    end
+  else
+    Chef::Log.warn "Instance '#{new_resource.name}' does not exist"
+  end
+end
