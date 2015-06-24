@@ -18,6 +18,7 @@ def load_current_resource
     current_resource.image current_resource.instance.image.id
     current_resource.instance_type current_resource.instance.instance_type
     current_resource.key_name current_resource.instance.key_pair.name unless current_resource.instance.key_pair.nil?
+    current_resource.security_groups current_resource.instance.security_groups.map{|sg| sg.group_id}.sort unless current_resource.instance.security_groups.nil?
     current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
   end
 end
@@ -28,11 +29,11 @@ action :create do
   unless new_resource.security_groups.nil?
     fail "Security groups must be all strings" unless new_resource.security_groups.all?{|x| x.instance_of?String}
     sgs = new_resource.security_groups.map do |sg|
-      res = Chef::AwsEc2.get_security_group(vpc, sg)
+      res = Chef::AwsEc2.get_security_group(current_resource.vpc_o, sg)
       fail "Security group '#{sg}' not found" if res.nil?
       res.id
-    opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
     end
+    sgs.sort!
   end
   converge_by "Creating instance '#{new_resource.name}'" do
     opts = {
@@ -41,6 +42,7 @@ action :create do
       instance_type: new_resource.instance_type,
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
+    opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
     opts[:disable_api_termination] = new_resource.disable_api_termination unless new_resource.disable_api_termination.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
@@ -51,6 +53,9 @@ action :create do
   fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
   fail "Cannot change instance type #{current_resource.instance_type} -> #{new_resource.instance_type}" unless current_resource.instance_type == new_resource.instance_type
   fail "Cannot change key pair #{current_resource.key_name} -> #{new_resource.key_name}" unless current_resource.key_name == new_resource.key_name
+  converge_by "Changing security groups #{current_resource.instance.security_groups.map{|sg| sg.group_name}} -> #{new_resource.security_groups}" do
+    current_resource.instance.modify_attribute(groups: sgs)
+  end unless new_resource.security_groups.nil? or current_resource.security_groups == sgs
   converge_by "Changing API termination protection #{current_resource.disable_api_termination} -> #{new_resource.disable_api_termination}" do
     current_resource.instance.modify_attribute(disable_api_termination: {value: new_resource.disable_api_termination})
   end unless current_resource.disable_api_termination == new_resource.disable_api_termination
