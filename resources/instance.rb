@@ -1,11 +1,14 @@
 def self.IMAGES(region, name)
   return nil if region.nil? or name.nil?
-  case name
-  when :nat
+  res = case name.to_s
+  when 'nat'
     case region
     when 'us-east-1' then 'ami-b0210ed8'
     when 'eu-west-1' then 'ami-ef76e898'
     end
+  end
+  if res.nil? then name.to_s
+  else res.to_s
   end
 end
 
