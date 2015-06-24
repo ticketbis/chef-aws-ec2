@@ -42,12 +42,12 @@ action :create do
       image_id: i,
       min_count: 1, max_count: 1,
       instance_type: new_resource.instance_type,
-      monitoring: {enabled: new_resource.monitoring}
+      monitoring: {enabled: new_resource.monitoring},
+      disable_api_termination: new_resource.disable_api_termination
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
     opts[:user_data] = new_resource.user_data unless new_resource.user_data.nil?
-    opts[:disable_api_termination] = new_resource.disable_api_termination unless new_resource.disable_api_termination.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
     instances.each {|i| i.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}}
