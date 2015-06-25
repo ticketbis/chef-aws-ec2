@@ -26,7 +26,6 @@ attribute :security_groups, kind_of: [String, Array]
 attribute :user_data, kind_of: String
 attribute :user_data_allow_stop, equal_to: [true, false], default: false
 attribute :monitoring, equal_to: [true,false], default: false
-
 attribute :disable_api_termination, equal_to: [true, false], default: true
 attribute :instance_initiated_shutdown_behavior, equal_to: ['stop', 'terminate'], default: 'stop'
 attribute :ebs_optimized, equal_to: [true, false], default: false
