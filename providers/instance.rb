@@ -51,7 +51,7 @@ action :create do
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
-    opts[:user_data] = new_resource.user_data unless new_resource.user_data.nil?
+    opts[:user_data] = Base64.encode64(new_resource.user_data) unless new_resource.user_data.nil?
     instances = current_resource.subnet_o.create_instances(opts)
     instances.each {|i| i.create_tags(tags: [{ key: 'Name', value: new_resource.name}])}
     instances.each {|i| i.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}}
