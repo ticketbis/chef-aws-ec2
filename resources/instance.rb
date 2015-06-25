@@ -1,5 +1,6 @@
 def self.IMAGES(region, name)
   return nil if region.nil? or name.nil?
+  return name if /^ami-/ =~ name
   res = case name.to_s
   when 'nat'
     case region
@@ -7,9 +8,8 @@ def self.IMAGES(region, name)
     when 'eu-west-1' then 'ami-ef76e898'
     end
   end
-  if res.nil? then name.to_s
-  else res.to_s
-  end
+  fail "Cannot found image '#{name.to_s}' in region '#{region}'" if res.nil?
+  res
 end
 
 actions :create, :start, :stop, :delete
