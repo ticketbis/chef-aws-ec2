@@ -7,7 +7,7 @@ end
 use_inline_resources
 
 def load_current_resource
-  @current_resource = Chef::Resource::AwsEc2Instance.new @new_resource.name
+  self.current_resource = Chef::Resource.resource_for_node(new_resource.declared_type, node).new @new_resource.name
   current_resource.client = Chef::AwsEc2.get_client aws_credentials, aws_region
   current_resource.vpc_o = Chef::AwsEc2.get_vpc new_resource.vpc, current_resource.client unless current_resource.client.nil?
   fail "Unknown VPC '#{new_resource.vpc}'" if current_resource.vpc_o.nil?
