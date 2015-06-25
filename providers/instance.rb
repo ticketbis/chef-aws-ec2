@@ -24,6 +24,7 @@ def load_current_resource
     current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
     current_resource.instance_initiated_shutdown_behavior current_resource.instance.describe_attribute(attribute: 'instanceInitiatedShutdownBehavior').instance_initiated_shutdown_behavior.value
     current_resource.ebs_optimized current_resource.instance.describe_attribute(attribute: 'ebsOptimized').ebs_optimized.value
+    current_resource.source_dest_check current_resource.instance.describe_attribute(attribute: 'sourceDestCheck').source_dest_check.value
   end
 end
 
@@ -98,6 +99,9 @@ action :create do
   converge_by "Changing instance initiated shutdown behaviour #{current_resource.instance_initiated_shutdown_behavior} -> #{new_resource.instance_initiated_shutdown_behavior}" do
     current_resource.instance.modify_attribute(instance_initiated_shutdown_behavior: {value: new_resource.instance_initiated_shutdown_behavior})
   end unless current_resource.instance_initiated_shutdown_behavior == new_resource.instance_initiated_shutdown_behavior
+  converge_by "Changing source destination check #{current_resource.source_dest_check} -> #{new_resource.source_dest_check}" do
+    current_resource.instance.modify_attribute(source_dest_check: {value: new_resource.source_dest_check})
+  end unless current_resource.source_dest_check == new_resource.source_dest_check
   load_current_resource
 end
 
@@ -107,9 +111,9 @@ action :delete do
     converge_by "Enabling API termination in '#{new_resource.name}'" do
       current_resource.instance.modify_attribute(disable_api_termination: {value: false})
     end if current_resource.disable_api_termination
-  converge_by "Deleting instance '#{new_resource.name}'" do
-    current_resource.instance.terminate
-    current_resource.instance.wait_until_terminated{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
+    converge_by "Deleting instance '#{new_resource.name}'" do
+      current_resource.instance.terminate
+      current_resource.instance.wait_until_terminated{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
     end
   end
 end

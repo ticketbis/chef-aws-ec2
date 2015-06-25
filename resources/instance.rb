@@ -29,6 +29,7 @@ attribute :monitoring, equal_to: [true,false], default: false
 attribute :disable_api_termination, equal_to: [true, false], default: true
 attribute :instance_initiated_shutdown_behavior, equal_to: ['stop', 'terminate'], default: 'stop'
 attribute :ebs_optimized, equal_to: [true, false], default: false
+attribute :source_dest_check, equal_to: [true, false], default: true
 attribute :allow_stopping, equal_to: [true, false], default: false
 attribute :wait, equal_to: [true, false], default: true
 attribute :wait_delay, kind_of: Integer, default: 10
