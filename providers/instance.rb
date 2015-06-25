@@ -66,9 +66,7 @@ action :create do
         current_resource.instance.modify_attribute(instance_type: {value: new_resource.instance_type})
       end unless current_resource.instance_type == new_resource.instance_type
       converge_by "Changing user data" do
-        puts "Actual: #{current_resource.user_data}"
-        puts "Wants: #{new_resource.user_data}"
-        current_resource.instance.modify_attribute(user_data: {value: new_resource.instance_type})
+        current_resource.instance.modify_attribute(user_data: {value: new_resource.user_data})
       end unless current_resource.user_data == new_resource.user_data
       converge_by "Starting instance '#{new_resource.name}'" do
         current_resource.instance.start
