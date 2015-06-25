@@ -19,7 +19,8 @@ def load_current_resource
     current_resource.instance_type current_resource.instance.instance_type
     current_resource.key_name current_resource.instance.key_pair.name unless current_resource.instance.key_pair.nil?
     current_resource.security_groups current_resource.instance.security_groups.map{|sg| sg.group_id}.sort unless current_resource.instance.security_groups.nil?
-    current_resource.user_data Base64.decode64(current_resource.instance.describe_attribute(attribute: 'userData').user_data.value)
+    t = current_resource.instance.describe_attribute(attribute: 'userData').user_data.value
+    current_resource.user_data Base64.decode64(t) unless t.nil?
     current_resource.monitoring(current_resource.instance.monitoring.state == 'enabled')
     current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
     current_resource.instance_initiated_shutdown_behavior current_resource.instance.describe_attribute(attribute: 'instanceInitiatedShutdownBehavior').instance_initiated_shutdown_behavior.value
