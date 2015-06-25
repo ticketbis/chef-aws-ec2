@@ -102,10 +102,16 @@ action :create do
 end
 
 action :delete do
+  if current_resource.exist?
+    fail 'The machine is protected and \'allow_stopping\' is false' if current_resource.disable_api_termination and not new_resource.allow_stopping
+    converge_by "Enabling API termination in '#{new_resource.name}'" do
+      current_resource.instance.modify_attribute(disable_api_termination: {value: false})
+    end if current_resource.disable_api_termination
   converge_by "Deleting instance '#{new_resource.name}'" do
     current_resource.instance.terminate
     current_resource.instance.wait_until_terminated{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
-  end if current_resource.exist?
+    end
+  end
 end
 
 action :start do
