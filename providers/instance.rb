@@ -23,6 +23,7 @@ def load_current_resource
     current_resource.monitoring(current_resource.instance.monitoring.state == 'enabled')
     current_resource.disable_api_termination current_resource.instance.describe_attribute(attribute: 'disableApiTermination').disable_api_termination.value
     current_resource.instance_initiated_shutdown_behavior current_resource.instance.describe_attribute(attribute: 'instanceInitiatedShutdownBehavior').instance_initiated_shutdown_behavior.value
+    current_resource.ebs_optimized current_resource.instance.describe_attribute(attribute: 'ebsOptimized').ebs_optimized.value
   end
 end
 
@@ -45,7 +46,8 @@ action :create do
       instance_type: new_resource.instance_type,
       monitoring: {enabled: new_resource.monitoring},
       disable_api_termination: new_resource.disable_api_termination,
-      instance_initiated_shutdown_behavior: new_resource.instance_initiated_shutdown_behavior
+      instance_initiated_shutdown_behavior: new_resource.instance_initiated_shutdown_behavior,
+      ebs_optimized: new_resource.ebs_optimized
     }
     opts[:key_name] = new_resource.key_name unless new_resource.key_name.nil?
     opts[:security_group_ids] = sgs unless sgs.nil? or sgs.empty?
@@ -58,7 +60,7 @@ action :create do
   # Check unchangeable values
   fail "Cannot change image id #{current_resource.image} -> #{i}" unless i == current_resource.image
   fail "Cannot change key pair #{current_resource.key_name} -> #{new_resource.key_name}" unless current_resource.key_name == new_resource.key_name
-  unless current_resource.instance_type == new_resource.instance_type and current_resource.user_data == new_resource.user_data
+  unless current_resource.instance_type == new_resource.instance_type and current_resource.user_data == new_resource.user_data and current_resource.ebs_optimized == new_resource.ebs_optimized
     if new_resource.allow_stopping
       converge_by "Stopping instance '#{new_resource.name}'" do
         current_resource.instance.stop
@@ -70,6 +72,9 @@ action :create do
       converge_by "Changing user data" do
         current_resource.instance.modify_attribute(user_data: {value: new_resource.user_data})
       end unless current_resource.user_data == new_resource.user_data
+      converge_by "Changing EBS optimization #{current_resource.ebs_optimized} -> #{new_resource.ebs_optimized}" do
+        current_resource.instance.modify_attribute(ebs_optimized: {value: new_resource.ebs_optimized})
+      end unless current_resource.ebs_optimized == new_resource.ebs_optimized
       converge_by "Starting instance '#{new_resource.name}'" do
         current_resource.instance.start
         current_resource.instance.wait_until_running{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}
