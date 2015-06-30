@@ -26,14 +26,14 @@ action :create do
   converge_by "Creating subnet #{@new_resource.name}" do
     opts = {
       cidr_block: @new_resource.cidr_block,
-      availability_zone: "#{@new_resource.region}#{@new_resource.availability_zone}"
+      availability_zone: "#{aws_region}#{@new_resource.availability_zone.downcase}"
     }
     s = @current_resource.vpc_o.create_subnet opts
     s.create_tags tags: [{ key: "Name", value: @new_resource.name}]
     load_current_resource
   end unless @current_resource.exists?
   raise "New CIDR block requested, but cannot change once created" if @current_resource.cidr_block != @new_resource.cidr_block
-  raise "New availability zone requested, but cannot change once created" if @current_resource.availability_zone != @new_resource.availability_zone
+  raise "New availability zone requested, but cannot change once created" if @current_resource.availability_zone != @new_resource.availability_zone.downcase
   raise "New Public IP assignment policy requested, but cannot change once created" if @current_resource.public_ip != @new_resource.public_ip
   converge_by "Replacing route table to #{@new_resource.route_table}" do
     rt = Chef::AwsEc2.get_route_table @current_resource.vpc_o, @new_resource.route_table
