@@ -28,7 +28,8 @@ action :create do
     rt.create_tags tags: [{ key: "Name", value: @new_resource.name}]
     load_current_resource
   end unless @current_resource.exists?
-  @new_resource.routes.each_pair do |cidr, dest|
+  rt = massage_routes new_resource.routes
+  rt.each_pair do |cidr, dest|
     converge_by "Creating route entry #{cidr} => #{dest}" do
       create_route cidr, dest
     end unless @current_resource.routes_o.has_key? cidr
@@ -36,11 +37,11 @@ action :create do
   @current_resource.routes_o.each_pair do |cidr, dest|
     converge_by "Deleting route entry #{cidr} => #{dest}" do
       @current_resource.client.delete_route route_table_id: @current_resource.route_table.id, destination_cidr_block: cidr
-    end unless @new_resource.routes.has_key? cidr
+    end unless rt.has_key? cidr
     converge_by "Changing route entry #{cidr} => #{dest} to #{cidr} => #{@new_resource.routes[cidr]}" do
       @current_resource.client.delete_route route_table_id: @current_resource.route_table.id, destination_cidr_block: cidr
       create_route cidr, @new_resource.routes[cidr]
-    end if @new_resource.routes.has_key? cidr and @new_resource.routes[cidr] != dest
+    end if rt.has_key? cidr and rt[cidr] != dest
   end
 end
 
@@ -57,6 +58,16 @@ def get_route_table
    @current_resource.vpc_o.route_tables.select do |rt|
      rt.tags.any? { |t| t.key == 'Name' and t.value == @new_resource.name}
    end.first
+end
+
+def massage_routes rt
+  res = {}
+  rt['default'] = new_resource.default_route if new_resource.default_route
+  rt.each do |cidr, dest|
+    cidr = '0.0.0.0/0' if cidr == 'default'
+    res[cidr] = dest
+  end
+  res
 end
 
 def create_route cidr, dest

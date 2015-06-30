@@ -20,12 +20,3 @@ def id
   route_table.id unless route_table.nil?
 end
 
-def after_created
-  @routes ||= Hash.new
-  @routes['default'] = @default_route if @default_route
-  if @routes.has_key? 'default'
-    @routes['0.0.0.0/0'] = routes['default']
-    @routes.delete 'default'
-  end
-  # raise Chef::Exceptions::ValidationFailed.new 'KK'
-end
