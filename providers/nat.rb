@@ -18,7 +18,6 @@ private
 
 def create_base action=:create
   if action == :create then action = [:create, :start]
-  else action = [:stop, :delete]
   end
   aws_ec2_instance new_resource.name do
     vpc new_resource.vpc
