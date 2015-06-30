@@ -103,12 +103,35 @@ action :create do
   converge_by "Changing source destination check #{current_resource.source_dest_check} -> #{new_resource.source_dest_check}" do
     current_resource.instance.modify_attribute(source_dest_check: {value: new_resource.source_dest_check})
   end unless current_resource.source_dest_check == new_resource.source_dest_check
+  if current_resource.instance.vpc_addresses.count < 1 and new_resource.assign_eip
+    ni = current_resource.instance.network_interfaces.first
+    add = Chef::AwsEc2.get_free_eip current_resource.client
+    converge_by "Assigning EIP '#{add.public_ip}'" do
+      current_resource.client.associate_address(instance_id: current_resource.id, allocation_id: add.allocation_id)
+    end
+  end
+  if current_resource.instance.vpc_addresses.count > 0 and not new_resource.assign_eip
+    current_resource.instance.vpc_addresses.each do |a|
+      converge_by "Releasing EIP '#{a.public_ip}'" do
+        current_resource.client.disassociate_address(association_id: a.association_id)
+        current_resource.client.release_address(allocation_id: a.allocation_id)
+      end
+    end
+  end
   load_current_resource
 end
 
 action :delete do
   if current_resource.exist?
     fail 'The machine is protected and \'allow_stopping\' is false' if current_resource.disable_api_termination and not new_resource.allow_stopping
+    if current_resource.instance.vpc_addresses.count > 0
+      current_resource.instance.vpc_addresses.each do |a|
+        converge_by "Releasing EIP '#{a.public_ip}'" do
+          current_resource.client.disassociate_address(association_id: a.association_id)
+          current_resource.client.release_address(allocation_id: a.allocation_id)
+        end
+      end
+    end
     converge_by "Enabling API termination in '#{new_resource.name}'" do
       current_resource.instance.modify_attribute(disable_api_termination: {value: false})
     end if current_resource.disable_api_termination

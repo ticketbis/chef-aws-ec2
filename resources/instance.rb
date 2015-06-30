@@ -34,6 +34,7 @@ attribute :allow_stopping, equal_to: [true, false], default: false
 attribute :wait, equal_to: [true, false], default: true
 attribute :wait_delay, kind_of: Integer, default: 10
 attribute :wait_attempts, kind_of: Integer, default: 30
+attribute :assign_eip, equal_to: [true, false], default: false
 attribute :region, kind_of: String
 attribute :access_key_id, kind_of: String
 attribute :secret_access_key, kind_of: String
