@@ -5,7 +5,7 @@ default_action :create
 attribute :name, kind_of: String, name_attribute: true
 attribute :vpc, kind_of: String, required: true
 attribute :default_route, kind_of: String
-attribute :routes, kind_of: Hash
+attribute :routes, kind_of: Hash, default: {}
 attribute :region, kind_of: String
 attribute :access_key_id, kind_of: String
 attribute :secret_access_key, kind_of: String
