@@ -19,8 +19,6 @@ def load_current_resource
       acc
     end
     @current_resource.routes_o = Hash.new if @current_resource.routes_o.empty?
-    Chef::Log.warn "Parsed: #{@current_resource.routes_o}"
-    Chef::Log.warn "Wanted: #{@new_resource.routes}"
   end
 end
 
