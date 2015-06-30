@@ -38,7 +38,13 @@ action :create do
   converge_by "Replacing route table to #{@new_resource.route_table}" do
     rt = Chef::AwsEc2.get_route_table @current_resource.vpc_o, @new_resource.route_table
     raise "Subnet '#{@new_resource.route_table}' does not exist" if rt.nil?
-    rt.associate_with_subnet subnet_id: @current_resource.id
+    prev_rt = current_resource.vpc_o.route_tables.find{|rt| rt.associations(filters: [{name: 'association.subnet-id', values: [current_resource.id]}]).count > 0}
+    if prev_rt.nil?
+      rt.associate_with_subnet subnet_id: @current_resource.id
+    else
+      prev_assoc = prev_rt.associations(filters: [{name: 'association.subnet-id', values: [current_resource.id]}]).first
+      prev_assoc.replace_subnet(route_table_id: rt.id)
+    end
   end if @current_resource.route_table != @new_resource.route_table
 end
 
