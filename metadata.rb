@@ -10,4 +10,5 @@ long_description IO.read(File.join(
 version '0.1.0'
 
 depends 'aws-base'
+depends 'aws-route53'
 
