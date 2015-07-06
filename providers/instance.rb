@@ -118,6 +118,18 @@ action :create do
       end
     end
   end
+  private_addresses = Chef::AwsEc2.get_tag(current_resource.instance, 'chef_private_addresses') || []
+  (new_resource.private_dns_name - private_addresses).each do |a|
+    aws_route53_entry a do
+      instance "#{new_resource.name}@#{new_resource.subnet}@#{new_resource.vpc}"
+    end
+  end
+  Chef::AwsEc2.set_tag(current_resource.instance, 'chef_private_addresses', new_resource.private_dns_name)
+  (private_addresses - new_resource.private_dns_name).each do |a|
+    aws_route53_entry a do
+      action :delete
+    end
+  end
   load_current_resource
 end
 
@@ -135,6 +147,12 @@ action :delete do
     converge_by "Enabling API termination in '#{new_resource.name}'" do
       current_resource.instance.modify_attribute(disable_api_termination: {value: false})
     end if current_resource.disable_api_termination
+    private_addresses = Chef::AwsEc2.get_tag(current_resource.instance, 'chef_private_addresses') || []
+    private_addresses.each do |a|
+      aws_route53_entry a do
+        action :delete
+      end
+    end
     converge_by "Deleting instance '#{new_resource.name}'" do
       current_resource.instance.terminate
       current_resource.instance.wait_until_terminated{|w| w.delay=new_resource.wait_delay; w.max_attempts=new_resource.wait_attempts}

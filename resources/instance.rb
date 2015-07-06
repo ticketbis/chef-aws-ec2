@@ -21,6 +21,8 @@ attribute :wait, equal_to: [true, false], default: true
 attribute :wait_delay, kind_of: Integer, default: 10
 attribute :wait_attempts, kind_of: Integer, default: 30
 attribute :assign_eip, equal_to: [true, false], default: false
+attribute :private_dns_name, kind_of: [String, Array], default: []
+attribute :public_dns_name, kind_of: [String, Array], default: []
 attribute :region, kind_of: String
 attribute :access_key_id, kind_of: String
 attribute :secret_access_key, kind_of: String
@@ -36,5 +38,8 @@ def id
 end
 
 def after_created
-  security_groups([security_groups]) unless security_groups.nil? or security_groups.instance_of?Array
+  security_groups([security_groups]) unless @security_groups.nil? or @security_groups.instance_of?Array
+  private_dns_name([private_dns_name]) unless @private_dns_name.nil? or @private_dns_name.instance_of?Array
+  public_dns_name([public_dns_name]) unless @public_dns_name.nil? or @public_dns_name.instance_of?Array
+  fail "TODO: PUBLIC ADDRESSES" unless @public_dns_name.nil?
 end
