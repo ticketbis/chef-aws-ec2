@@ -130,6 +130,18 @@ action :create do
       action :delete
     end
   end
+  public_addresses = Chef::AwsEc2.get_tag(current_resource.instance, 'chef_public_addresses') || []
+  (new_resource.public_dns_name - public_addresses).each do |a|
+    aws_route53_entry a do
+      eip "#{new_resource.name}@#{new_resource.subnet}@#{new_resource.vpc}"
+    end
+  end
+  Chef::AwsEc2.set_tag(current_resource.instance, 'chef_public_addresses', new_resource.public_dns_name)
+  (public_addresses - new_resource.public_dns_name).each do |a|
+    aws_route53_entry a do
+      action :delete
+    end
+  end
   load_current_resource
 end
 

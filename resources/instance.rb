@@ -41,5 +41,4 @@ def after_created
   security_groups([security_groups]) unless @security_groups.nil? or @security_groups.instance_of?Array
   private_dns_name([private_dns_name]) unless @private_dns_name.nil? or @private_dns_name.instance_of?Array
   public_dns_name([public_dns_name]) unless @public_dns_name.nil? or @public_dns_name.instance_of?Array
-  fail "TODO: PUBLIC ADDRESSES" unless @public_dns_name.nil?
 end
