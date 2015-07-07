@@ -38,6 +38,8 @@ def create_base action=:create
     wait_delay new_resource.wait_delay
     wait_attempts new_resource.wait_attempts
     assign_eip true
+    private_dns_name new_resource.private_dns_name
+    public_dns_name new_resource.public_dns_name
     region new_resource.region
     access_key_id new_resource.access_key_id
     secret_access_key new_resource.secret_access_key
